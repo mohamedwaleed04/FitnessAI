@@ -4,6 +4,8 @@ import { calculateJointAngles, checkBiomechanics } from '../modules/motion/biome
 import { WorkoutClassifier } from './workout-classifier.service.js';
 import { analyzePose } from './flaskService.js';
 import { extractFrames, frameToTensor } from './video.service.js';
+import { isExerciseCorrect } from '../modules/motion/biomechanics.js';
+
 
 let detector = null;
 const classifier = new WorkoutClassifier();
@@ -17,29 +19,64 @@ export const initializeModels = async () => {
   await classifier.initialize();
 };
 
+
 export const analyzeVideo = async (videoBuffer, options = {}) => {
-  const { useFlask = true, exerciseType } = options;
+  const { useFlask = true, exerciseType = 'squat' } = options; // Default to squat
   
   if (useFlask) {
-    // Use Flask AI endpoint for processing
     try {
       const flaskResults = await analyzePose(videoBuffer, exerciseType);
       return {
-        detectedWorkout: flaskResults.exercise_type || 'unknown',
+        detectedWorkout: flaskResults.exercise_type || exerciseType,
         feedback: flaskResults.feedback || [],
         summary: flaskResults.summary || generateSummary([]),
         keypoints: flaskResults.keypoints || []
       };
     } catch (error) {
       console.error('Falling back to local processing due to Flask error:', error);
-      // Fall back to local processing if Flask fails
-      return localVideoAnalysis(videoBuffer);
+      return localVideoAnalysis(videoBuffer, exerciseType);
     }
   } else {
-    // Use local processing only
-    return localVideoAnalysis(videoBuffer);
+    return localVideoAnalysis(videoBuffer, exerciseType);
   }
 };
+
+async function localVideoAnalysis(videoBuffer, exerciseType) {
+  if (!detector) await initializeModels();
+  
+  try {
+    const frames = await extractFrames(videoBuffer);
+    const feedback = [];
+    let detectedWorkout = exerciseType || 'unknown';
+    let keypoints = [];
+
+    for (const frame of frames) {
+      const tensor = frameToTensor(frame);
+      const pose = await detector.estimatePoses(tensor);
+      tensor.dispose();
+
+      if (pose.length > 0) {
+        keypoints = pose[0].keypoints;
+        const { correct, feedback: frameFeedback } = isExerciseCorrect(keypoints, exerciseType);
+        feedback.push(...frameFeedback.map(msg => ({
+          timestamp: Date.now(),
+          message: msg,
+          severity: correct ? 'low' : 'high'
+        })));
+      }
+    }
+
+    return {
+      detectedWorkout,
+      feedback,
+      summary: generateSummary(feedback),
+      keypoints
+    };
+  } catch (error) {
+    console.error('Local video analysis error:', error);
+    throw new Error('Failed to analyze video');
+  }
+}
 
 async function localVideoAnalysis(videoBuffer) {
   if (!detector) await initializeModels();

@@ -9,20 +9,18 @@ let nutritionLogs = [];
 
 // AI Meal Plan Generation
 export const generateMealPlan = async (req, res) => {
-    const { goal, preferences, restrictions } = req.body;
+    const { goal } = req.body;
+
+    // Validate goal input
+    if (!['1', '2', '3'].includes(goal?.toString())) {
+        return res.status(400).json({
+            error: 'Invalid goal value',
+            details: 'Goal must be: 1 (muscle_gain), 2 (fat_loss), or 3 (maintain_weight)'
+        });
+    }
 
     try {
-        const result = await generateAImealPlan({
-            goal,
-            preferences,
-            restrictions,
-            userData: {
-                weight: req.user.weight,
-                height: req.user.height,
-                age: req.user.age,
-                gender: req.user.gender
-            }
-        });
+        const result = await generateMealPlan(goal);
         
         res.status(200).json({
             success: true,
@@ -36,7 +34,6 @@ export const generateMealPlan = async (req, res) => {
         });
     }
 };
-
 // Existing Nutritionix Functions (unchanged)
 async function fetchNutritionalData(foodQuery) {
     const url = 'https://trackapi.nutritionix.com/v2/natural/nutrients';

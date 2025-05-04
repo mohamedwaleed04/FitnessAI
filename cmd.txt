@@ -1,0 +1,7 @@
+npm i -r requirments.txt
+
+npm i install
+
+curl ifconfig.me //to get your ip address
+
+node index.js 

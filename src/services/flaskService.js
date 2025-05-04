@@ -22,5 +22,5 @@ export const analyzePose = (videoData, exerciseType) =>
 export const generateWorkoutPlan = (userData) => 
   callFlaskEndpoint('generate-workout', userData);
 
-export const generateMealPlan = (userData) => 
-  callFlaskEndpoint('generate-meal-plan', userData);
+export const generateMealPlan = (goal) => 
+  callFlaskEndpoint('generate-meal-plan', { goal: goal.toString() });

@@ -1,6 +1,3 @@
-import { analyzeVideo } from '../../services/pose.service.js';
-import MotionAnalysis from '../../../db/models/motion.model.js';
-
 export const processWorkout = async (req, res) => {
   try {
     if (!req.file) {
@@ -9,7 +6,7 @@ export const processWorkout = async (req, res) => {
 
     const options = {
       useFlask: true, 
-      exerciseType: req.body.exerciseType
+      exerciseType: req.body.exerciseType || 'squat' 
     };
 
     const results = await analyzeVideo(req.file.buffer, options);
@@ -28,7 +25,10 @@ export const processWorkout = async (req, res) => {
     
     res.json({
       success: true,
-      data: motionAnalysis
+      data: {
+        ...motionAnalysis.toObject(),
+        description: exerciseRules[results.detectedWorkout]?.description || ''
+      }
     });
   } catch (error) {
     console.error('Video processing error:', error);

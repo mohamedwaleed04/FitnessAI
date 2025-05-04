@@ -1,5 +1,35 @@
+export const exerciseRules = {
+  squat: {
+    description: "في تمرين السكوات، يجب أن تكون زاوية الركبة أقل من 90 درجة.",
+    jointAngles: {
+      leftKnee: { min: 80, max: 120 },
+      rightKnee: { min: 80, max: 120 }
+    }
+  },
+  push_up: {
+    description: "في تمرين الضغط، يجب أن تكون زاوية الكوع 90 درجة تقريبًا.",
+    jointAngles: {
+      leftElbow: { min: 75, max: 105 },
+      rightElbow: { min: 75, max: 105 }
+    }
+  },
+  deadlift: {
+    description: "في تمرين deadlift، يجب الحفاظ على استقامة الظهر أثناء رفع الوزن.",
+    jointAngles: {
+      leftHip: { min: 170, max: 180 },
+      rightHip: { min: 170, max: 180 }
+    }
+  },
+  bench_press: {
+    description: "في تمرين bench press، يجب أن تكون زاوية الكوع 90 درجة أثناء الهبوط.",
+    jointAngles: {
+      leftElbow: { min: 75, max: 105 },
+      rightElbow: { min: 75, max: 105 }
+    }
+  }
+};
+
 export function calculateJointAngles(keypoints) {
-  // Convert keypoints to joints object if needed
   const joints = Array.isArray(keypoints) 
     ? keypoints.reduce((acc, kp) => {
         acc[kp.name || kp.part] = { x: kp.x, y: kp.y, score: kp.score || kp.confidence };
@@ -12,61 +42,30 @@ export function calculateJointAngles(keypoints) {
     rightKnee: getAngle(joints.right_hip, joints.right_knee, joints.right_ankle),
     leftElbow: getAngle(joints.left_shoulder, joints.left_elbow, joints.left_wrist),
     rightElbow: getAngle(joints.right_shoulder, joints.right_elbow, joints.right_wrist),
-    torsoLean: getTorsoLeanAngle(
-      joints.left_shoulder, 
-      joints.right_shoulder, 
-      joints.left_hip, 
-      joints.right_hip
-    )
+    leftHip: getAngle(joints.left_shoulder, joints.left_hip, joints.left_knee),
+    rightHip: getAngle(joints.right_shoulder, joints.right_hip, joints.right_knee)
   };
 }
 
-// Keep the rest of your biomechanics.js functions unchanged
-export function checkBiomechanics(angles, timestamp, exerciseType = 'generic') {
+export function isExerciseCorrect(landmarks, exercise) {
+  const rules = exerciseRules[exercise]?.jointAngles;
+  if (!rules) return { correct: false, feedback: ["Unknown exercise type"] };
+
+  let correct = true;
   const feedback = [];
 
-  // Squat exercise-specific checks
-  if (exerciseType === 'squat') {
-    if (angles.leftKnee < 90 || angles.rightKnee < 90) {
-      feedback.push({
-        timestamp,
-        joint: 'knee',
-        issue: 'depth',
-        severity: 'medium',
-        correction: 'Lower your hips more during squats.',
-        score: 70
-      });
+  for (const [joint, range] of Object.entries(rules)) {
+    const angle = calculateJointAngles(landmarks)[joint];
+    
+    if (angle < range.min || angle > range.max) {
+      correct = false;
+      feedback.push(`${joint.replace(/([A-Z])/g, ' $1').toLowerCase()} angle is out of range (${range.min}-${range.max}°). Current: ${angle.toFixed(1)}°`);
     }
   }
 
-  // Knee hyperextension check
-  if (angles.leftKnee > 190 || angles.rightKnee > 190) {
-    feedback.push({
-      timestamp,
-      joint: 'knee',
-      issue: 'hyperextension',
-      severity: 'high',
-      correction: 'Keep a slight bend in the knees.',
-      score: 50
-    });
-  }
-
-  // Excessive torso lean check
-  if (angles.torsoLean > 30) {
-    feedback.push({
-      timestamp,
-      joint: 'torso',
-      issue: 'excessive_lean',
-      severity: 'medium',
-      correction: 'Keep your torso more upright.',
-      score: 65
-    });
-  }
-
-  return feedback;
+  return { correct, feedback };
 }
 
-// Helper function to calculate the angle between three points
 function getAngle(a, b, c) {
   if (!a || !b || !c || a.score < 0.3 || b.score < 0.3 || c.score < 0.3) return 0;
 
@@ -74,26 +73,4 @@ function getAngle(a, b, c) {
                   Math.atan2(a.y - b.y, a.x - b.x);
   let angle = Math.abs(radians * 180 / Math.PI);
   return angle > 180 ? 360 - angle : angle;
-}
-
-// Helper function to calculate torso lean angle
-function getTorsoLeanAngle(leftShoulder, rightShoulder, leftHip, rightHip) {
-  if (!leftShoulder || !rightShoulder || !leftHip || !rightHip) return 0;
-
-  // Calculate shoulder midpoint
-  const shoulderMid = {
-    x: (leftShoulder.x + rightShoulder.x) / 2,
-    y: (leftShoulder.y + rightShoulder.y) / 2
-  };
-
-  // Calculate hip midpoint
-  const hipMid = {
-    x: (leftHip.x + rightHip.x) / 2,
-    y: (leftHip.y + rightHip.y) / 2
-  };
-
-  // Calculate angle from vertical
-  const dx = shoulderMid.x - hipMid.x;
-  const dy = shoulderMid.y - hipMid.y;
-  return Math.abs(Math.atan2(dx, dy) * 180 / Math.PI);
 }
