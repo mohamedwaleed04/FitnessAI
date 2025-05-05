@@ -10,32 +10,49 @@ export const analyzePose = async (filePath, exerciseType = 'squat') => {
     formData.append('exercise_type', exerciseType);
 
     try {
-        const response = await axios.post(`${FLASK_API_URL}/analyze-pose`, formData, {
-            headers: {
-                ...formData.getHeaders(),
-                'Content-Length': formData.getLengthSync()
-            },
+        const response = await axios.post(`${FLASK_API_URL}/api/analyze-pose`, formData, {
+            headers: formData.getHeaders(),
             timeout: 60000
         });
         return response.data;
     } catch (error) {
-        console.error('Flask API Error:', error.message);
-        throw new Error(`AI service failed: ${error.message}`);
+        console.error('Pose analysis error:', error.message);
+        throw error;
     }
 };
 
-export const getRealTimeFeedback = async (frameData, exerciseType) => {
+export const generateWorkoutPlan = async (userData) => {
     try {
-        const response = await axios.post(`${FLASK_API_URL}/realtime-feedback`, {
-            frame_data: frameData.toString('base64'),
-            exercise_type: exerciseType
-        }, {
-            headers: { 'Content-Type': 'application/json' },
+        const response = await axios.post(`${FLASK_API_URL}/api/generate-workout`, userData, {
             timeout: 10000
         });
         return response.data;
     } catch (error) {
-        console.error('Real-time analysis error:', error);
+        console.error('Workout generation error:', error.message);
+        throw error;
+    }
+};
+
+export const generateMealPlan = async (goalData) => {
+    try {
+        const response = await axios.post(`${FLASK_API_URL}/api/generate-meal-plan`, goalData, {
+            timeout: 10000
+        });
+        return response.data;
+    } catch (error) {
+        console.error('Meal plan generation error:', error.message);
+        throw error;
+    }
+};
+
+export const getHealthAnalysis = async (healthData) => {
+    try {
+        const response = await axios.post(`${FLASK_API_URL}/api/health-analysis`, healthData, {
+            timeout: 10000
+        });
+        return response.data;
+    } catch (error) {
+        console.error('Health analysis error:', error.message);
         throw error;
     }
 };
