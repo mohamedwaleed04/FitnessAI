@@ -8,31 +8,44 @@ const NUTRITIONIX_APP_KEY = 'c384d740480b62f92653ec1603483bcb';
 let nutritionLogs = [];
 
 // AI Meal Plan Generation
+import { generateWeeklyMealPlan } from './diet.service.js';
+
 export const generateMealPlan = async (req, res) => {
+  try {
+    // Check if request body exists and has goal property
+    if (!req.body || !req.body.goal) {
+      return res.status(400).json({
+        success: false,
+        error: "Goal parameter is required in request body"
+      });
+    }
+
     const { goal } = req.body;
+    const validGoals = ['muscle_gain', 'fat_loss', 'maintain'];
 
-    // Validate goal input
-    if (!['1', '2', '3'].includes(goal?.toString())) {
-        return res.status(400).json({
-            error: 'Invalid goal value',
-            details: 'Goal must be: 1 (muscle_gain), 2 (fat_loss), or 3 (maintain_weight)'
-        });
+    // Validate the goal parameter
+    if (!validGoals.includes(goal)) {
+      return res.status(400).json({
+        success: false,
+        error: `Invalid goal. Must be one of: ${validGoals.join(', ')}`
+      });
     }
 
-    try {
-        const result = await generateMealPlan(goal);
-        
-        res.status(200).json({
-            success: true,
-            mealPlan: result
-        });
-    } catch (error) {
-        console.error('AI Meal Plan Error:', error);
-        res.status(500).json({ 
-            error: 'Failed to generate meal plan',
-            details: error.message 
-        });
-    }
+    // Generate the meal plan
+    const mealPlan = await generateWeeklyMealPlan(goal);
+
+    res.json({
+      success: true,
+      data: mealPlan
+    });
+  } catch (error) {
+    console.error('Error generating meal plan:', error);
+    res.status(500).json({
+      success: false,
+      error: "Failed to generate meal plan",
+      details: error.message
+    });
+  }
 };
 // Existing Nutritionix Functions (unchanged)
 async function fetchNutritionalData(foodQuery) {

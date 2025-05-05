@@ -1,40 +1,50 @@
+import { analyzeVideo } from '../services/pose.service.js';
+import path from 'path';
+
 export const processWorkout = async (req, res) => {
   try {
     if (!req.file) {
       return res.status(400).json({ error: 'No video file uploaded' });
     }
 
-    const options = {
-      useFlask: true, 
-      exerciseType: req.body.exerciseType || 'squat' 
-    };
-
-    const results = await analyzeVideo(req.file.buffer, options);
-    
-    // Save to database
-    const motionAnalysis = new MotionAnalysis({
-      user: req.user._id,
-      videoPath: req.file.path,
-      exerciseType: results.detectedWorkout,
-      feedback: results.feedback,
-      keypoints: results.keypoints,
-      summary: results.summary
+    const results = await analyzeVideo(req.file.path, {
+      exerciseType: req.body.exerciseType || 'squat'
     });
-    
-    await motionAnalysis.save();
-    
+
     res.json({
       success: true,
       data: {
-        ...motionAnalysis.toObject(),
-        description: exerciseRules[results.detectedWorkout]?.description || ''
+        ...results,
+        videoUrl: `/uploads/${path.basename(req.file.path)}`
       }
     });
   } catch (error) {
     console.error('Video processing error:', error);
-    res.status(500).json({ 
+    res.status(500).json({
       error: 'Error processing video',
-      details: error.message 
+      details: error.message
     });
+  }
+};
+
+// New endpoint for real-time processing
+export const realTimeAnalysis = async (req, res) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({ error: 'No video file uploaded' });
+    }
+
+    const frames = [];
+    await processVideoFrames(req.file.path, (results) => {
+      frames.push(results);
+    });
+
+    res.json({
+      success: true,
+      frameCount: frames.length,
+      frames
+    });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
   }
 };

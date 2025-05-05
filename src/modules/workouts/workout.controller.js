@@ -1,6 +1,11 @@
 import { Workout } from '../../../db/models/workout.model.js';
 import { catchError } from '../../utils/catch.error.js';
 import { EXERCISE_LIBRARY } from '../../../data/exercises.js';
+import { 
+  calculateTotalDuration,
+  calculateTotalCalories,
+  formatWorkoutDuration
+} from '../utils/workout.utils.js';
 
 // Health Analysis Functions
 function calculateBMI(weight, height) {
