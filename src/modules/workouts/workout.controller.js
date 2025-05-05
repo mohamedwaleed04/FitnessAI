@@ -5,7 +5,7 @@ import {
   calculateTotalDuration,
   calculateTotalCalories,
   formatWorkoutDuration
-} from '../utils/workout.utils.js';
+} from './workout.utils.js';
 
 // Health Analysis Functions
 function calculateBMI(weight, height) {

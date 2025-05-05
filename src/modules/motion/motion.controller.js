@@ -1,4 +1,4 @@
-import { analyzeVideo } from '../services/pose.service.js';
+import { analyzeVideo } from '../../services/pose.service.js';
 import path from 'path';
 
 export const processWorkout = async (req, res) => {
