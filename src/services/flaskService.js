@@ -16,7 +16,7 @@ export const analyzePose = async (filePath, exerciseType = 'squat') => {
     formData.append('exercise_type', exerciseType);
 
     try {
-        const response = await axios.post(`${FLASK_API_URL}/motion/analyze-pose`, formData, {
+        const response = await axios.post(`${FLASK_API_URL}/motion/analyze`, formData, {
             headers: {
                 ...formData.getHeaders(),
                 'Content-Length': formData.getLengthSync()
@@ -37,7 +37,7 @@ export const analyzePose = async (filePath, exerciseType = 'squat') => {
  */
 export const generateWorkoutPlan = async (userData) => {
     try {
-        const response = await axios.post(`${FLASK_API_URL}/workout/generate-workout`, userData, {
+        const response = await axios.post(`${FLASK_API_URL}/workout/generate`, userData, {
             headers: { 'Content-Type': 'application/json' },
             timeout: 10000
         });
@@ -55,7 +55,7 @@ export const generateWorkoutPlan = async (userData) => {
  */
 export const generateMealPlan = async (goal) => {
     try {
-        const response = await axios.post(`${FLASK_API_URL}/diet/generate-meal-plan`, 
+        const response = await axios.post(`${FLASK_API_URL}/diet/generate`, 
             { goal },
             { headers: { 'Content-Type': 'application/json' },
               timeout: 10000 }
@@ -67,4 +67,3 @@ export const generateMealPlan = async (goal) => {
     }
 };
 
-// Remove getRealTimeFeedback if not used or implement it properly
