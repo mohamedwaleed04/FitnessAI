@@ -4,21 +4,21 @@ import {
   realTimeAnalysis 
 } from './motion.controller.js';
 import { isAuthenticated } from '../../middleware/auth.middleware.js';
-import upload from '../../middleware/upload.middleware.js';
+import { videoUpload } from '../../middleware/upload.middleware.js'; 
 
 const router = express.Router();
 
-// Standard analysis (full video processing)
+// Standard analysis
 router.post('/analyze', 
   isAuthenticated,
-  upload.single('video'),
+  videoUpload, // Using the updated middleware
   processWorkout
 );
 
 // Frame-by-frame analysis
 router.post('/analyze-realtime',
   isAuthenticated,
-  upload.single('video'),
+  videoUpload, // Using the updated middleware
   realTimeAnalysis
 );
 
