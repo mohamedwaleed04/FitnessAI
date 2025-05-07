@@ -1,4 +1,4 @@
-npm i -r requirments.txt
+npm i requirments.txt
 
 npm i install
 
