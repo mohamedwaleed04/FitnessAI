@@ -48,19 +48,21 @@ this.modelPath = path.join(__dirname, '../../db/models/workout-classifier/model.
    */
   async classifyFromPose(keypoints) {
     if (!this.model) await this.initialize();
-
+  
     try {
       const inputTensor = this.normalizeKeypoints(keypoints);
-      const prediction = this.model.predict(inputTensor);
+      const reshapedTensor = inputTensor.reshape([3, 3, 24, 1]); // Match model shape
+      const prediction = this.model.predict(reshapedTensor);
       const scores = await prediction.array();
-      
+  
       inputTensor.dispose();
+      reshapedTensor.dispose();
       prediction.dispose();
-
+  
       const maxScore = Math.max(...scores[0]);
-      if (maxScore < this.minConfidence) return 'unknown';
-
-      return this.classes[scores[0].indexOf(maxScore)];
+      return maxScore >= this.minConfidence 
+        ? this.classes[scores[0].indexOf(maxScore)] 
+        : 'unknown';
     } catch (err) {
       console.error('Classification error:', err);
       return 'unknown';
@@ -71,7 +73,11 @@ this.modelPath = path.join(__dirname, '../../db/models/workout-classifier/model.
    * Normalize keypoints for model input
    */
   normalizeKeypoints(keypoints) {
-    const points = keypoints.flatMap(kp => [kp.x, kp.y, kp.score]);
-    return tf.tensor2d([points], [1, keypoints.length * 3]);
-  }
-}
+    // Ensure 24 keypoints (pad with zeros if needed)
+    const paddedKeypoints = Array(24).fill().map((_, i) => {
+      const kp = keypoints[i] || { x: 0, y: 0, score: 0 }; // Default if missing
+      return [kp.x, kp.y, kp.score];
+    }).flat();
+  
+    return tf.tensor2d([paddedKeypoints], [1, 24 * 3]); // Shape: [1, 72]
+  }};
