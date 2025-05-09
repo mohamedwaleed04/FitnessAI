@@ -23,7 +23,7 @@ const fileFilter = (req, file, cb) => {
   }
 };
 
-// Configure multer
+// Configure multer (only once)
 const upload = multer({
   storage: storage,
   fileFilter: fileFilter,
@@ -33,4 +33,4 @@ const upload = multer({
 });
 
 // Single file upload middleware
-export const videoUpload = upload.single('videoFile'); // Changed field name to 'videoFile'
+export const videoUpload = upload.single('videoFile');
