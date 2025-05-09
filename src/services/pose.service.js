@@ -52,40 +52,67 @@ export const analyzeVideo = async (videoBuffer, options = {}) => {
 };
 
 async function localVideoAnalysis(videoBuffer, exerciseType) {
-  if (!detector) await initializeModels();
-  
+  let tensors = [];
   try {
+    if (!detector) {
+      console.log('Initializing models...');
+      await initializeModels();
+    }
+
+    console.log('Extracting frames...');
     const frames = await extractFrames(videoBuffer);
+    if (frames.length === 0) throw new Error('No frames extracted');
+
+    console.log(`Processing ${frames.length} frames...`);
     const feedback = [];
-    let keypoints = [];
+    
+    for (const [i, frame] of frames.entries()) {
+      try {
+        console.log(`Processing frame ${i+1}/${frames.length}`);
+        const tensor = frameToTensor(frame);
+        const pose = await detector.estimatePoses(tensor);
+        tensor.dispose();
 
-    for (const frame of frames) {
-      const tensor = frameToTensor(frame);
-      const pose = await detector.estimatePoses(tensor);
-      tensor.dispose();
+        if (pose.length === 0) {
+          console.warn(`No pose detected in frame ${i+1}`);
+          continue;
+        }
 
-      if (pose.length > 0) {
-        keypoints = pose[0].keypoints;
+        const keypoints = pose[0].keypoints;
+        console.log('Keypoints detected:', keypoints.length);
+
         const angles = calculateJointAngles(keypoints);
         const { correct, feedback: frameFeedback } = checkExerciseForm(angles, exerciseType);
         
-        feedback.push(...frameFeedback.map(msg => ({
-          timestamp: Date.now(),
-          message: msg,
-          severity: correct ? 'low' : 'high'
-        })));
+        feedback.push(...frameFeedback);
+      } catch (frameError) {
+        console.error(`Error processing frame ${i+1}:`, frameError);
+      
+    for (const frame of frames) {
+      const tensor = frameToTensor(frame);
+      tensors.push(tensor); // Track for cleanup
+      // ... processing ...
+    }
+  } finally {
+    // Clean up all tensors
+    tensors.forEach(t => t?.dispose());
+    console.log('Cleaned up tensors');
       }
+    }
+
+    if (feedback.length === 0) {
+      throw new Error('No valid poses detected in any frame');
     }
 
     return {
       detectedWorkout: exerciseType,
       feedback,
       summary: generateSummary(feedback),
-      keypoints
+      keypoints: []
     };
   } catch (error) {
-    console.error('Local video analysis error:', error);
-    throw new Error('Failed to analyze video');
+    console.error('Full error stack:', error);
+    throw new Error(`Video processing failed: ${error.message}`);
   }
 }
 

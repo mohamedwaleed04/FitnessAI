@@ -13,7 +13,9 @@ export const extractFrames = async (videoBuffer, fps = 2) => {
     const frames = [];
     const canvas = createCanvas(640, 480);
     const ctx = canvas.getContext('2d');
-
+    if (!videoBuffer || videoBuffer.length === 0) {
+      throw new Error('Empty video buffer received');
+    }
     ffmpeg()
       .input(new PassThrough().end(videoBuffer))
       .inputFormat('mp4')

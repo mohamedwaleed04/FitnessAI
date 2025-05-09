@@ -26,18 +26,22 @@ this.modelPath = path.join(__dirname, '../../db/models/workout-classifier/model.
   async initialize() {
     try {
       console.log(`Loading model from: ${this.modelPath}`);
+      const modelDir = path.dirname(this.modelPath);
       
-      // Verify model files exist
-      const fs = await import('fs');
-      if (!fs.existsSync(this.modelPath)) {
-        throw new Error(`Model file not found at ${this.modelPath}`);
-      }
-
+      // Verify all model files exist
+      const requiredFiles = ['model.json', 'group1-shard1of1.bin'];
+      requiredFiles.forEach(file => {
+        const filePath = path.join(modelDir, file);
+        if (!fs.existsSync(filePath)) {
+          throw new Error(`Missing model file: ${file}`);
+        }
+      });
+  
       this.model = await tf.loadGraphModel(`file://${this.modelPath}`);
-      console.log('Classifier model loaded successfully');
+      console.log('Model loaded. Input shape:', this.model.inputs[0].shape);
     } catch (err) {
-      console.error('Error loading classifier:', err);
-      throw new Error(`Failed to load classifier model: ${err.message}`);
+      console.error('Model initialization failed:', err);
+      throw err; // Rethrow to see the exact error
     }
   }
 
