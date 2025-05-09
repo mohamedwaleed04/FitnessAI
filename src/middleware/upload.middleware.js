@@ -1,10 +1,14 @@
 import multer from 'multer';
 import path from 'path';
+import fs from 'fs'; // Add this at the top
 
-// Configure storage
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
     const uploadPath = path.join(process.cwd(), 'uploads', 'videos');
+
+    // Create directory if it doesn't exist
+    fs.mkdirSync(uploadPath, { recursive: true });
+
     cb(null, uploadPath);
   },
   filename: (req, file, cb) => {
@@ -12,6 +16,7 @@ const storage = multer.diskStorage({
     cb(null, uniqueSuffix + path.extname(file.originalname));
   }
 });
+
 
 // File filter
 const fileFilter = (req, file, cb) => {
