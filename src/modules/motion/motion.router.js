@@ -12,3 +12,4 @@ router.post('/motion/analyze',
   videoUpload,
   analyzePose
 );
+export default router;
