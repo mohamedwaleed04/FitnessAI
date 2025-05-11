@@ -7,7 +7,7 @@ import { videoUpload } from '../../middleware/upload.middleware.js';
 
 const router = express.Router();
 
-router.post('/motion/analyze', 
+router.post('/analyze', 
   isAuthenticated,
   videoUpload,
   analyzePose
