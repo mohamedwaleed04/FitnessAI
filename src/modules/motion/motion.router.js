@@ -11,7 +11,9 @@ const router = express.Router();
 // Standard analysis
 router.post('/motion/analyze', 
   isAuthenticated,
+  realTimeAnalysis.
   videoUpload,
+  processWorkout,
   analyzePose
 );
 export default router;

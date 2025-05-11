@@ -14,5 +14,10 @@ export const EXERCISE_LIBRARY = [
       imageUrl: 'https://www.shutterstock.com/image-illustration/push-on-floor-chest-exercise-2327165209',
       videoUrl: 'https://media4.giphy.com/media/v1.Y2lkPTc5MGI3NjExeWlkNG5nYWgzdXk4MnZoNWU2M3FmY3dqbGo3dzcxOTAxczdjcWV2dCZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/xT0BKnEIxLj3w2phpm/giphy.gif',
     },
+    {
+      name: 'deadlift',
+      imageUrl: 'https://www.kettlebellkings.com/cdn/shop/articles/barbell-deadlift-movement.gif?v=1692228918',
+      videoUrl: 'https://www.journalmenu.com/wp-content/uploads/2022/03/Deadlift-gif-front-view.webm',
+    },
   ];
   
