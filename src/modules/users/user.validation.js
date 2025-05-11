@@ -38,6 +38,12 @@ export const signupSchema = Joi.object({
     'number.min': 'Height must be at least 1',
     'number.max': 'Height cannot exceed 300',
   }),
+  activityLevel: Joi.string().valid('sedentary', 'light', 'moderate', 'active', 'very_active').messages({
+    'any.only': 'Activity level must be one of: sedentary, light, moderate, active, very_active'
+  }),
+  goal: Joi.string().valid('muscle_gain', 'fat_loss', 'maintain').messages({
+    'any.only': 'Goal must be one of: muscle_gain, fat_loss, maintain'
+  }),
 });
 
 // Validation schema for login
@@ -70,7 +76,11 @@ export const updateUserSchema = Joi.object({
     'number.min': 'Age must be at least 1',
     'number.max': 'Age cannot exceed 120',
   }),
+  activityLevel: Joi.string().valid('sedentary', 'light', 'moderate', 'active', 'very_active'),
+  goal: Joi.string().valid('muscle_gain', 'fat_loss', 'maintain')
 });
+
+
 
 // Validation schema for delete user
 export const deleteUserSchema = Joi.object({

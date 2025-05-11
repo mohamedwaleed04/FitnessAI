@@ -12,7 +12,19 @@ export const signup = catchError(async (req, res, next) => {
     return next(new Error(errors.join(', ')));
   }
 
-  const { userName, email, password, confirmPassword, age, gender, weight, height } = req.body;
+  const { userName, email, password, confirmPassword, age, gender, weight, height, activityLevel, goal } = req.body;
+
+  const user = await User.create({ 
+    userName, 
+    email, 
+    password: passwordHashed, 
+    age, 
+    gender, 
+    weight, 
+    height,
+    activityLevel: activityLevel || 'moderate',
+    goal: goal || 'maintain'
+  });
 
   // Check if email is already used
   const isUser = await User.findOne({ email });
@@ -22,9 +34,9 @@ export const signup = catchError(async (req, res, next) => {
 
   const passwordHashed = bcryptjs.hashSync(password, 10);
 
-  const user = await User.create({ userName, email, password: passwordHashed, age, gender, weight, height, });
 
-  const userResponse = { userName: user.userName, email: user.email, age: user.age, gender: user.gender, weight: user.weight, height: user.height, };
+  const userResponse = { userName: user.userName, email: user.email, age: user.age, gender: user.gender, weight: user.weight, height: user.height,  activityLevel: user.activityLevel,
+    goal: user.goal };
 
   // Return the created user without unwanted fields
   res.status(201).json({ success: true, data: userResponse });
@@ -78,7 +90,7 @@ export const changepass = catchError(async (req, res, next) => {
 });
 
 export const updateuser = catchError(async (req, res, next) => {
-  const { age, userName } = req.body;
+  const { age, userName, activityLevel, goal } = req.body;
 
   if (!req.user || !req.user.id) {
     return next(new Error('Unauthorized: User not authenticated'));
@@ -86,13 +98,12 @@ export const updateuser = catchError(async (req, res, next) => {
 
   const userId = req.user.id;
 
-  // Update the user's age and userName
+  // Update the user
   const updatedUser = await User.findByIdAndUpdate(
     userId,
-    { age, userName },
+    { age, userName, activityLevel, goal },
     { new: true }
   );
-
   if (!updatedUser) {
     return next(new Error('User not found'));
   }

@@ -35,6 +35,16 @@ const userSchema = new mongoose.Schema(
       type: Number,
       required: true,
     },
+    activityLevel: {
+      type: String,
+      enum: ['sedentary', 'light', 'moderate', 'active', 'very_active'],
+      default: 'moderate'
+    },
+    goal: {
+      type: String,
+      enum: ['muscle_gain', 'fat_loss', 'maintain'],
+      default: 'maintain'
+    }
   },
   { timestamps: true }
 );

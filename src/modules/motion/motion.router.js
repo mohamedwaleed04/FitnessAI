@@ -9,17 +9,9 @@ import { videoUpload } from '../../middleware/upload.middleware.js';
 const router = express.Router();
 
 // Standard analysis
-router.post('/analyze', 
+router.post('/motion/analyze', 
   isAuthenticated,
-  videoUpload, // Using the updated middleware
-  processWorkout
+  videoUpload,
+  analyzePose
 );
-
-// Frame-by-frame analysis
-router.post('/analyze-realtime',
-  isAuthenticated,
-  videoUpload, // Using the updated middleware
-  realTimeAnalysis
-);
-
 export default router;
