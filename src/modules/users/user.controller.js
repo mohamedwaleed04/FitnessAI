@@ -9,40 +9,52 @@ export const signup = catchError(async (req, res, next) => {
   const { error } = signupSchema.validate(req.body, { abortEarly: false });
   if (error) {
     const errors = error.details.map((err) => err.message);
-    return next(new Error(errors.join(', ')));
+    return res.status(400).json({ success: false, errors });
   }
 
   const { userName, email, password, confirmPassword, age, gender, weight, height, activityLevel, goal } = req.body;
 
- 
-
-  // Check if email is already used
-  const isUser = await User.findOne({ email });
-  if (isUser) {
-    return next(new Error("Email is already in use"));
+  // Check if passwords match
+  if (password !== confirmPassword) {
+    return res.status(400).json({ success: false, message: "Passwords do not match" });
   }
 
-  const passwordHashed = bcryptjs.hashSync(password, 10);
+  // Check if email exists
+  const existingUser = await User.findOne({ email });
+  if (existingUser) {
+    return res.status(409).json({ success: false, message: "Email already in use" });
+  }
 
-  const user = await User.create({ 
-    userName, 
-    email, 
-    password: passwordHashed, 
-    age, 
-    gender, 
-    weight, 
-    height,
-    activityLevel: activityLevel || 'moderate',
-    goal: goal || 'maintain'
-  });
-  
-  const userResponse = { userName: user.userName, email: user.email, age: user.age, gender: user.gender, weight: user.weight, height: user.height,  activityLevel: user.activityLevel,
-    goal: user.goal };
+  try {
+    // Hash password
+    const passwordHashed = await bcryptjs.hash(password, 12);
 
-  // Return the created user without unwanted fields
-  res.status(201).json({ success: true, data: userResponse });
+    // Create user
+    const user = await User.create({
+      userName,
+      email,
+      password: passwordHashed,
+      age,
+      gender,
+      weight,
+      height,
+      activityLevel: activityLevel || 'moderate',
+      goal: goal || 'maintain'
+    });
+
+    // Return response without password
+    const userResponse = { 
+      userName: user.userName, 
+      email: user.email, 
+      age: user.age, 
+      gender: user.gender 
+    };
+
+    res.status(201).json({ success: true, data: userResponse });
+  } catch (err) {
+    next(err);
+  }
 });
-
 export const login = catchError(async (req, res, next) => {
   const { error } = loginSchema.validate(req.body, { abortEarly: false });
   if (error) {
