@@ -9,27 +9,48 @@ export const signup = catchError(async (req, res, next) => {
   const { error } = signupSchema.validate(req.body, { abortEarly: false });
   if (error) {
     const errors = error.details.map((err) => err.message);
-    return res.status(400).json({ success: false, errors });
+    return res.status(400).json({ 
+      success: false, 
+      message: 'Validation error',
+      errors 
+    });
   }
 
-  const { userName, email, password, confirmPassword, age, gender, weight, height, activityLevel, goal } = req.body;
+  const { 
+    userName, 
+    email, 
+    password, 
+    confirmPassword, 
+    age, 
+    gender, 
+    weight, 
+    height, 
+    activityLevel, // Now required
+    goal // Now required
+  } = req.body;
 
   // Check if passwords match
   if (password !== confirmPassword) {
-    return res.status(400).json({ success: false, message: "Passwords do not match" });
+    return res.status(400).json({ 
+      success: false, 
+      message: "Passwords do not match" 
+    });
   }
 
   // Check if email exists
   const existingUser = await User.findOne({ email });
   if (existingUser) {
-    return res.status(409).json({ success: false, message: "Email already in use" });
+    return res.status(409).json({ 
+      success: false, 
+      message: "Email already in use" 
+    });
   }
 
   try {
     // Hash password
     const passwordHashed = await bcryptjs.hash(password, 12);
 
-    // Create user
+    // Create user - no more defaults needed since fields are required
     const user = await User.create({
       userName,
       email,
@@ -38,19 +59,24 @@ export const signup = catchError(async (req, res, next) => {
       gender,
       weight,
       height,
-      activityLevel: activityLevel || 'moderate',
-      goal: goal || 'maintain'
+      activityLevel, // Required
+      goal // Required
     });
 
     // Return response without password
     const userResponse = { 
       userName: user.userName, 
-      email: user.email, 
-      age: user.age, 
-      gender: user.gender 
+      email: user.email,
+      age: user.age,
+      gender: user.gender,
+      activityLevel: user.activityLevel, // Include in response
+      goal: user.goal // Include in response
     };
 
-    res.status(201).json({ success: true, data: userResponse });
+    res.status(201).json({ 
+      success: true, 
+      data: userResponse 
+    });
   } catch (err) {
     next(err);
   }
