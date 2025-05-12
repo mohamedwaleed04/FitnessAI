@@ -44,6 +44,20 @@ export const signupSchema = Joi.object({
   goal: Joi.string().valid('muscle_gain', 'fat_loss', 'maintain').messages({
     'any.only': 'Goal must be one of: muscle_gain, fat_loss, maintain'
   }),
+  activityLevel: Joi.string()
+  .valid('sedentary', 'light', 'moderate', 'active', 'very_active')
+  .required()
+  .messages({
+    'any.only': 'Activity level must be one of: sedentary, light, moderate, active, very_active',
+    'string.empty': 'Activity level is required'
+  }),
+goal: Joi.string()
+  .valid('muscle_gain', 'fat_loss', 'maintain')
+  .required()
+  .messages({
+    'any.only': 'Goal must be one of: muscle_gain, fat_loss, maintain',
+    'string.empty': 'Goal is required'
+  })
 });
 
 // Validation schema for login
